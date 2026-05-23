@@ -25,7 +25,11 @@ services:
       - media_files:/app/media
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.dev
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-preport}:${POSTGRES_PASSWORD:-preport}@db:5432/${POSTGRES_DB:-preport}
+      - POSTGRES_DB=${POSTGRES_DB:-preport}
+      - POSTGRES_USER=${POSTGRES_USER:-preport}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-preport}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
       - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
       - DEBUG=${DEBUG:-True}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
