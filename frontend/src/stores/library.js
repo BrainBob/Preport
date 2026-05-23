@@ -9,7 +9,7 @@ export const useLibraryStore = defineStore("library", () => {
   async function fetchItems(params = {}) {
     loading.value = true;
     try {
-      const { data } = await api.get("/findings/library/", { params });
+      const { data } = await api.get("/projects/library/", { params });
       items.value = data.results ?? data;
     } finally {
       loading.value = false;
@@ -17,12 +17,12 @@ export const useLibraryStore = defineStore("library", () => {
   }
 
   async function useInProject(libraryId, projectId) {
-    const { data } = await api.post(`/findings/library/${libraryId}/use_in_project/`, { project_id: projectId });
+    const { data } = await api.post(`/projects/library/${libraryId}/use_in_project/`, { project_id: projectId });
     return data;
   }
 
   async function deleteItem(id) {
-    await api.delete(`/findings/library/${id}/`);
+    await api.delete(`/projects/library/${id}/`);
     items.value = items.value.filter((i) => i.id !== id);
   }
 

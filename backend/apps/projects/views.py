@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
@@ -22,10 +23,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Project.objects.filter(
-            owner=user
-        ).union(
-            Project.objects.filter(team_members=user)
-        ).order_by("-created_at")
+            Q(owner=user) | Q(team_members=user)
+        ).distinct().order_by("-created_at")
 
     def get_permissions(self):
         if self.action in ["update", "partial_update", "destroy"]:
