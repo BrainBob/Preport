@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ report.title }}</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm 2cm 2.5cm 2cm;
+      @top-right { content: "{{ project.client_name }} — {{ project.project_name }}"; font-size: 9pt; color: #666; }
+      @bottom-right { content: "Страница " counter(page) " из " counter(pages); font-size: 9pt; color: #666; }
+      @bottom-left { content: "CONFIDENTIAL"; font-size: 9pt; color: #cc0000; }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; color: #222; line-height: 1.5; }
+
+    h1 { font-size: 22pt; color: #1a1a2e; margin-bottom: 8pt; }
+    h2 { font-size: 16pt; color: #1a1a2e; margin: 20pt 0 8pt; border-bottom: 2px solid #1a1a2e; padding-bottom: 4pt; }
+    h3 { font-size: 13pt; color: #333; margin: 12pt 0 6pt; }
+    p  { margin-bottom: 8pt; }
+    ul, ol { margin: 8pt 0 8pt 20pt; }
+    li { margin-bottom: 4pt; }
+    code { background: #f4f4f4; padding: 2pt 4pt; border-radius: 2pt; font-size: 9pt; }
+    pre  { background: #f4f4f4; padding: 8pt; border-radius: 4pt; overflow-x: auto; margin: 8pt 0; }
+    table { width: 100%; border-collapse: collapse; margin: 10pt 0; }
+    th, td { border: 1px solid #ddd; padding: 6pt 8pt; text-align: left; }
+    th { background: #1a1a2e; color: white; }
+    tr:nth-child(even) { background: #f9f9f9; }
+
+    .cover { page-break-after: always; display: flex; flex-direction: column; justify-content: center; min-height: 240mm; }
+    .cover-title { font-size: 28pt; font-weight: bold; color: #1a1a2e; margin-bottom: 12pt; }
+    .cover-subtitle { font-size: 16pt; color: #555; margin-bottom: 32pt; }
+    .cover-meta { font-size: 11pt; color: #444; line-height: 2; }
+    .cover-confidential { margin-top: 40pt; font-size: 13pt; color: #cc0000; font-weight: bold; border: 2px solid #cc0000; padding: 8pt 16pt; display: inline-block; }
+
+    .toc { page-break-after: always; }
+    .toc h2 { margin-bottom: 16pt; }
+    .toc-item { display: flex; justify-content: space-between; padding: 4pt 0; border-bottom: 1px dotted #ccc; }
+    .toc-item a { color: #1a1a2e; text-decoration: none; }
+
+    .severity-badge {
+      display: inline-block; padding: 3pt 10pt; border-radius: 12pt;
+      font-size: 9pt; font-weight: bold; color: white; text-transform: uppercase;
+    }
+    .sev-critical { background: #FF0000; }
+    .sev-high     { background: #FF6B00; }
+    .sev-medium   { background: #e6b800; color: #222; }
+    .sev-low      { background: #00C853; }
+    .sev-info     { background: #2196F3; }
+
+    .findings-summary table { margin-top: 12pt; }
+    .findings-summary .sev-count { font-weight: bold; font-size: 13pt; }
+
+    .finding { page-break-inside: avoid; margin-bottom: 24pt; border: 1px solid #ddd; border-radius: 4pt; overflow: hidden; }
+    .finding-header { padding: 10pt 14pt; display: flex; justify-content: space-between; align-items: center; }
+    .finding-title { font-size: 13pt; font-weight: bold; }
+    .finding-body { padding: 12pt 14pt; }
+    .finding-section { margin-bottom: 12pt; }
+    .finding-section-label { font-weight: bold; color: #555; font-size: 9pt; text-transform: uppercase; margin-bottom: 4pt; }
+    .cvss { font-size: 10pt; color: #666; margin-top: 4pt; }
+
+    .page-break { page-break-before: always; }
+  </style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="cover-title">{{ project.project_name }}</div>
+  <div class="cover-subtitle">Penetration Testing Report</div>
+  <div class="cover-meta">
+    <strong>Client:</strong> {{ project.client_name }}<br>
+    <strong>Type:</strong> {{ project.get_project_type_display }}<br>
+    {% if project.start_date %}<strong>Period:</strong> {{ project.start_date }} – {{ project.end_date }}<br>{% endif %}
+    <strong>Date:</strong> {{ report.created_at|date:"d.m.Y" }}<br>
+    <strong>Status:</strong> {{ project.get_status_display }}
+  </div>
+  <div class="cover-confidential">CONFIDENTIAL</div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <div class="toc-item"><a href="#executive-summary">1. Executive Summary</a><span>3</span></div>
+  <div class="toc-item"><a href="#findings-summary">2. Findings Summary</a><span>4</span></div>
+  <div class="toc-item"><a href="#findings-detail">3. Detailed Findings</a><span>5</span></div>
+</div>
+
+<!-- EXECUTIVE SUMMARY -->
+<div id="executive-summary" class="page-break">
+  <h2>1. Executive Summary</h2>
+  <p>
+    This report presents the results of a {{ project.get_project_type_display|lower }} assessment
+    conducted for {{ project.client_name }}.
+    {% if project.start_date %}
+    The assessment was performed during the period from {{ project.start_date }} to {{ project.end_date }}.
+    {% endif %}
+  </p>
+  {% if project.scope %}
+  <h3>Scope</h3>
+  <p>{{ project.scope }}</p>
+  {% endif %}
+
+  <h3>Risk Overview</h3>
+  <table>
+    <tr>
+      {% for sev, color in severity_colors.items %}
+      <th style="background:{{ color }}; {% if sev == 'medium' %}color:#222;{% endif %}">{{ sev|title }}</th>
+      {% endfor %}
+    </tr>
+    <tr>
+      {% for sev in severity_colors.keys %}
+      <td class="sev-count" style="text-align:center; font-size:18pt; font-weight:bold;">
+        {{ findings|selectattr("obj.severity", "equalto", sev)|list|length }}
+      </td>
+      {% endfor %}
+    </tr>
+  </table>
+</div>
+
+<!-- FINDINGS SUMMARY TABLE -->
+<div id="findings-summary" class="page-break findings-summary">
+  <h2>2. Findings Summary</h2>
+  <table>
+    <tr>
+      <th>#</th>
+      <th>Title</th>
+      <th>Severity</th>
+      <th>CVSS</th>
+      <th>Affected Components</th>
+    </tr>
+    {% for f in findings %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ f.obj.title }}</td>
+      <td>
+        <span class="severity-badge sev-{{ f.obj.severity }}">{{ f.obj.severity }}</span>
+      </td>
+      <td>{{ f.obj.cvss_score|default:"—" }}</td>
+      <td>{{ f.obj.affected_components|truncatechars:60 }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<!-- DETAILED FINDINGS -->
+<div id="findings-detail" class="page-break">
+  <h2>3. Detailed Findings</h2>
+  {% for f in findings %}
+  <div class="finding">
+    <div class="finding-header" style="background: {{ f.color }}20; border-left: 4px solid {{ f.color }};">
+      <div>
+        <div class="finding-title">{{ forloop.counter }}. {{ f.obj.title }}</div>
+        {% if f.obj.cvss_score %}<div class="cvss">CVSS: {{ f.obj.cvss_score }} | {{ f.obj.cvss_vector }}</div>{% endif %}
+      </div>
+      <span class="severity-badge sev-{{ f.obj.severity }}">{{ f.obj.severity }}</span>
+    </div>
+    <div class="finding-body">
+      {% if f.description_html %}
+      <div class="finding-section">
+        <div class="finding-section-label">Description</div>
+        {{ f.description_html|safe }}
+      </div>
+      {% endif %}
+      {% if f.impact_html %}
+      <div class="finding-section">
+        <div class="finding-section-label">Impact</div>
+        {{ f.impact_html|safe }}
+      </div>
+      {% endif %}
+      {% if f.steps_html %}
+      <div class="finding-section">
+        <div class="finding-section-label">Steps to Reproduce</div>
+        {{ f.steps_html|safe }}
+      </div>
+      {% endif %}
+      {% if f.remediation_html %}
+      <div class="finding-section">
+        <div class="finding-section-label">Remediation</div>
+        {{ f.remediation_html|safe }}
+      </div>
+      {% endif %}
+      {% if f.obj.affected_components %}
+      <div class="finding-section">
+        <div class="finding-section-label">Affected Components</div>
+        <p>{{ f.obj.affected_components }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-critical: #FF0000;
+  --color-high: #FF6B00;
+  --color-medium: #FFD700;
+  --color-low: #00C853;
+  --color-info: #2196F3;
+}
+
+.severity-critical { color: var(--color-critical); }
+.severity-high     { color: var(--color-high); }
+.severity-medium   { color: var(--color-medium); }
+.severity-low      { color: var(--color-low); }
+.severity-info     { color: var(--color-info); }
