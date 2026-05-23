@@ -1,100 +1,96 @@
 # Preport — Progress Tracker
 
-## Phase 1 — Backend Skeleton ✅ (done 2026-05-23)
+---
 
-### Backend
-- [x] Django project structure (`config/settings/base.py`, `dev.py`)
-- [x] Custom User model (`accounts.User`, email as USERNAME_FIELD)
-- [x] Models: `Project`, `Finding`, `FindingAttachment`, `FindingLibrary`
-- [x] Models: `ReportTemplate`, `Section` (self-referential), `Report`
-- [x] DRF serializers for all apps
-- [x] ViewSets: ProjectViewSet (clone, export), FindingViewSet (bulk_create, add_to_library)
-- [x] ViewSets: ReportViewSet (generate, download), ReportTemplateViewSet (clone)
-- [x] Custom permissions: `IsOwnerOrTeamMember`, `IsProjectOwner`
-- [x] JWT auth: simplejwt (1h access / 7d refresh with rotation)
-- [x] PDF generation: `PDFGenerationService` + WeasyPrint + `report.html` template
-- [x] Swagger/OpenAPI: drf-spectacular at `/api/docs/`
-- [x] URL routing for all apps
+## Phase 1 — Backend Skeleton ✅ (2026-05-23)
 
-### Infrastructure
-- [x] Docker Compose: db, backend, frontend, nginx
-- [x] Backend Dockerfile (python:3.12-slim + WeasyPrint system deps)
-- [x] Frontend Dockerfile (node:20-alpine)
-- [x] Nginx reverse proxy (WebSocket upgrade for Vite HMR)
-- [x] `.env.example` with all required vars
-- [x] `Makefile` (build, up, down, migrate, seed, lint)
-- [x] `.pre-commit-config.yaml` (black, flake8, pre-commit-hooks)
-- [x] `.gitignore`
-- [x] Push to `https://github.com/BrainBob/Preport.git` (commit 2973477)
+- [x] Django 4.2 + DRF + simplejwt + drf-spectacular
+- [x] Custom User model (email as login)
+- [x] Models: Project, Finding, FindingAttachment, FindingLibrary, ReportTemplate, Section, Report
+- [x] ViewSets с actions: clone, export, bulk_create, add_to_library, generate PDF, download
+- [x] Permissions: IsOwnerOrTeamMember, IsProjectOwner
+- [x] WeasyPrint PDF generation + HTML template (A4, cover page, ToC, findings)
+- [x] Docker Compose: db + backend + frontend + nginx
+- [x] Makefile, .env.example, .pre-commit-config.yaml, .gitignore
 
 ---
 
-## Phase 2 — Frontend Views 🔄 (in progress 2026-05-23)
+## Phase 2 — Frontend ✅ (2026-05-23)
 
-### Infrastructure
-- [x] `frontend/index.html` — Vite entry point
-- [x] `frontend/tailwind.config.js` + `postcss.config.js`
-- [x] Pinia stores: `auth.js`, `projects.js`
-
-### Stores (new)
-- [x] `stores/findings.js`
-- [x] `stores/reports.js`
-- [x] `stores/templates.js`
-- [x] `stores/library.js`
-
-### Views
-- [x] Router (`router/index.js`) — all routes + beforeEach guard
-- [x] `LoginView.vue` — email/password form, redirect on success
-- [x] `AppLayout.vue` — sidebar nav + RouterView
-- [x] `ProjectsView.vue` — card grid, filters, create dialog
-- [x] `ProjectDetailView.vue` — project header + findings table + delete confirm
-- [x] `FindingEditorView.vue` — Tiptap rich text per field + CVSS + status + references
-- [x] `ReportsView.vue` — reports list + generate + download PDF
-- [x] `TemplatesView.vue` — template list + create/edit/clone/delete
-- [x] `LibraryView.vue` — library findings + use-in-project dialog
-
-### Components
-- [x] `SeverityBadge.vue`
-- [x] `ProjectCard.vue` — card with severity counts + status chip
-- [x] `RichTextSection.vue` — Tiptap editor panel with toolbar (bold/italic/code/list)
-- [ ] `CvssCalculator.vue` (Phase 3)
+- [x] Vite + Vue 3 + Pinia + PrimeVue 4 (Aura) + Tailwind
+- [x] Axios client с JWT auto-refresh interceptor
+- [x] Stores: auth, projects, findings, reports, templates, library
+- [x] Views: Login, AppLayout (sidebar), Projects, ProjectDetail, FindingEditor, Reports, Templates, Library
+- [x] Components: SeverityBadge, ProjectCard, RichTextSection (Tiptap)
+- [x] Router с beforeEach auth guard
 
 ---
 
-## Phase 3 — Integration & Testing
+## Phase 3 — Stack Running ✅ (2026-05-23)
 
-- [ ] `make build && make up && make migrate` — verify stack starts
-- [ ] `make createsuperuser` — first admin user
-- [ ] `seed_data.py` management command (3 projects, 15+ findings, 2 templates)
-- [ ] End-to-end: login → create project → add finding → generate PDF
-- [ ] Fix any import/migration errors found during first run
-- [ ] Backend unit tests (pytest-django) for serializers + views
-- [ ] Frontend Vitest unit tests for stores
-
----
-
-## Phase 4 — Advanced Features
-
-- [ ] Tiptap rich text editor in FindingEditorView (bold, italic, code, images)
-- [ ] Drag-drop screenshot upload in FindingEditor (`FindingAttachment`)
-- [ ] CVSS v3.1 calculator component (interactive vector builder)
-- [ ] Drag-drop finding reordering (vuedraggable) in ProjectDetailView
-- [ ] Report section drag-drop builder in TemplatesView
-- [ ] PDF preview (iframe, full-screen) in ReportsView
-- [ ] Finding import from library (bulk add to project)
-- [ ] Project export → JSON + re-import
-- [ ] Dark mode toggle
-- [ ] User profile page (avatar upload, bio)
+- [x] Docker stack запущен: все 4 контейнера Up
+- [x] Миграции применены (accounts, projects, reports)
+- [x] Seed data: 3 проекта, 15 findings, 2 шаблона, 5 library items
+- [x] Логин работает, JWT выдаётся
+- [x] Все API эндпоинты проверены (projects, findings, library, templates, reports)
+- [x] Фикс: `union()` → `Q(owner|team_members).distinct()` в ProjectViewSet
+- [x] Фикс: URL routing — findings/library router объявлен до пустого prefix
+- [x] Фикс: POSTGRES_* переменные переданы в backend контейнер
+- [x] Фикс: DataTable белый фон (override Aura dark surface)
+- [x] UI открывается в браузере, данные отображаются
 
 ---
 
-## Known Decisions / Notes
+## Phase 4 — UI Polish & Core UX 🔄 (следующее)
 
-| Decision | Reason |
+### Срочно (мелкие баги)
+- [ ] ProjectsView: карточки проектов не показывают findings_stats (нет поля в сериализаторе)
+- [ ] Finding Editor: клик по строке → открытие редактора (проверить)
+- [ ] Finding Editor: сохранение через кнопку Save работает?
+
+### PDF генерация (ключевая фича)
+- [ ] Создать Report через ReportsView → Generate PDF → Download
+- [ ] Проверить WeasyPrint работает в контейнере (системные шрифты)
+- [ ] PDF preview: iframe внутри приложения
+
+### Rich text & редактор
+- [ ] Tiptap: проверить что редактор рендерится и сохраняет HTML
+- [ ] Drag-drop сортировка findings (vuedraggable)
+- [ ] Drag-drop загрузка скриншотов в finding (FindingAttachment)
+
+### CVSS Calculator
+- [ ] Интерактивный калькулятор CVSS 3.1 (выбор векторов → автосчёт score)
+
+---
+
+## Phase 5 — Advanced Features
+
+- [ ] Template builder: drag-drop секции, редактирование finding_template HTML
+- [ ] Finding library: bulk import в проект (несколько findings за раз)
+- [ ] Project import: загрузить JSON из export обратно
+- [ ] User profile: аватар, bio, смена пароля
+- [ ] Team members: добавить/убрать из проекта
+
+---
+
+## Phase 6 — Production
+
+- [ ] Django settings prod (DEBUG=False, ALLOWED_HOSTS, CSRF)
+- [ ] Nginx prod config (gzip, cache headers, SSL/TLS)
+- [ ] Gunicorn без --reload, workers = 2*CPU+1
+- [ ] Celery + Redis для async PDF generation
+- [ ] Backup стратегия для postgres_data volume
+- [ ] Деплой: VPS / Hetzner / fly.io
+
+---
+
+## Known Decisions
+
+| Решение | Причина |
 |---|---|
-| UUID PKs on main models | Avoid sequential ID enumeration in URLs |
-| WeasyPrint server-side PDF | No browser dependency, reproducible output |
-| PrimeVue 4 + Tailwind | Rich component set + utility styling |
-| JWT rotate on refresh | Security: refresh token single-use |
-| flake8 max-line-length=120 | Black default is 88 but Django code is verbose |
-| gunicorn --reload in dev | Hot-reload without rebuilding container |
+| UUID PKs | Нет IDOR через перебор числовых ID |
+| WeasyPrint server-side | Воспроизводимый PDF без браузера |
+| PrimeVue 4 + Tailwind | Богатые компоненты + утилитарный стиль |
+| JWT rotate on refresh | Одноразовый refresh token |
+| Q() вместо union() | union() не поддерживает .get()/.filter() после |
+| findings/ до "" в router | Django URL resolver — первый совпавший паттерн |

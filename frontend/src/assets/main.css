@@ -15,3 +15,23 @@
 .severity-medium   { color: var(--color-medium); }
 .severity-low      { color: var(--color-low); }
 .severity-info     { color: var(--color-info); }
+
+/* Force light background on DataTable rows — Aura theme can apply dark surface colors */
+.p-datatable .p-datatable-tbody > tr {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+.p-datatable .p-datatable-tbody > tr:hover {
+  background: #f9fafb !important;
+}
+.p-datatable.p-datatable-striped .p-datatable-tbody > tr:nth-child(even) {
+  background: #f9fafb !important;
+}
+.p-datatable .p-datatable-thead > tr > th {
+  background: #f3f4f6 !important;
+  color: #374151 !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+.p-datatable .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid #f3f4f6 !important;
+}
